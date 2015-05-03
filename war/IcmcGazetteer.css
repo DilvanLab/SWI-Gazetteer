@@ -1,0 +1,71 @@
+/** Add css rules here for your application. */
+/** Example rules used by the template application (remove for your app) */
+h1 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #777777;
+	margin: 40px 0px 70px;
+	text-align: center;
+}
+
+#Loading-Message{
+	margin-top:30%;
+	margin-left:30%;
+}
+
+.sendButton {
+	display: block;
+	font-size: 16pt;
+}
+
+/** Most GWT widgets already have a style name defined */
+.gwt-DialogBox {
+	width: 400px;
+}
+
+.dialogVPanel {
+	margin: 5px;
+}
+
+.serverResponseLabelError {
+	color: red;
+}
+
+/** Set ids using widget.getElement().setId("idOfElement") */
+#closeButton {
+	margin: 15px 6px 6px;
+}
+
+.watchListHeader {
+	background-color: #A7C942;
+	color: white;
+	font-style: italic;
+}
+
+.tdPlaces {
+	font-size: 1.2em;
+	border: 1px solid #98bf21;
+}
+
+.trPlaces {
+	color: #000;
+	background-color: #EAF2D3;
+}
+.borda {
+	margin-top:2em;
+	}
+map {
+margin-left: 5em;
+margin-right:5em;
+margin-top:5em;
+}
+infoTable {
+margin-left: 5em;
+margin-right:5em;
+margin-top:5em;
+}
+borderRight {
+	border-right:groove;
+	border-color:black;
+	   background-color: #b0c4de;
+}

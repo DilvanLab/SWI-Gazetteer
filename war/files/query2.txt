@@ -1,0 +1,21 @@
+PREFIX geof:<http://www.opengis.net/def/function/geosparql/>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX geo:<http://www.opengis.net/ont/geosparql#>                                                                                  
+PREFIX opengis: <http://www.opengis.net/def/uom/OGC/1.0/>
+PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#>
+
+SELECT  ?instance ?date ?locality ?contributors ?agreement ?wkt  ?subject ?county ?triplas
+WHERE { 
+                 ?instance rdf:type <http://www.geonames.org/ontology/mappings#Camp> .		
+		 ?instance swi:locality ?locality .
+		 ?instance swi:contributors ?contributors .
+		 ?instance swi:agreement ?agreement . 
+		 ?instance swi:ntriples ?triplas .
+		 ?instance geo:hasGeometry ?geo1 .
+                 ?geo1 geo:asWKT ?wkt . 
+		 OPTIONAL { ?instance swi:hasCounty ?county . }
+                 
+		 OPTIONAL { ?geo1 swi:date ?date .  }
+		 
+FILTER regex(str(?locality), "catuquira").
+}ORDER BY DESC (?triplas)

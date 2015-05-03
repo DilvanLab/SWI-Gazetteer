@@ -1,0 +1,2 @@
+# Module icmc_gazetteer
+# RPC service class, partial path of RPC policy file

@@ -1,0 +1,18 @@
+PREFIX geof:<http://www.opengis.net/def/function/geosparql/>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX geo:<http://www.opengis.net/ont/geosparql#>                                                                                  
+PREFIX opengis: <http://www.opengis.net/def/uom/OGC/1.0/>
+PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#>
+
+SELECT  ?instance ?date ?locality ?contributors ?agreement ?wkt ?county ?triplas
+WHERE { ?instance rdf:type <http://dbpedia.org/ontology/ProtectedArea> .		
+		 ?instance swi:locality ?locality .
+		 ?instance swi:contributors ?contributors.
+		 ?instance swi:agreement ?agreement . 
+		 ?instance swi:ntriples ?triplas . 
+		 OPTIONAL { ?instance swi:hasCounty ?uc . ?uc swi:county ?county}
+         ?instance geo:hasGeometry ?geo1 .
+		 OPTIONAL { ?geo1 swi:date ?date . }
+		 ?geo1 geo:asWKT ?wkt .
+	 FILTER(geof:sfWithin(?wkt, geof:buffer("POINT(-3.0  -60.0);http://www.opengis.net/def/crs/EPSG/0/4326"^^<http://strdf.di.uoa.gr/ontology#WKT>, 100000, opengis:metre))). 
+}ORDER BY DESC (?triplas)

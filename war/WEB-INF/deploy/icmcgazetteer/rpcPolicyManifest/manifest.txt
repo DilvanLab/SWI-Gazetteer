@@ -1,0 +1,3 @@
+# Module icmcgazetteer
+# RPC service class, partial path of RPC policy file
+br.usp.icmc.gazetteer.client.GazetteerService, 36193F0F974471D5ADE94553A4B69623.gwt.rpc

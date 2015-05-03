@@ -1,0 +1,26 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.insertStyle{
+			margin-top: 2em;
+			margin-right:3em;
+			margin-left:1em;
+		}
+	
+	</ui:style>
+		<g:VerticalPanel styleName="infoTable" >
+			<g:Label text="Place Name:" ui:field="label_place_inf"/>
+			<g:TextArea ui:field="place_name"/>
+			<g:ListBox ui:field="onty_type"/>
+			<g:Label text="County" ui:field="County"/>
+			<g:TextBox ui:field="county"/>
+			<g:HorizontalPanel>
+				<g:RadioButton name="new name" text="Point" ui:field="point_radio"/>
+				<g:RadioButton name="new name" text="Polygon" ui:field="polygon_radio"/>
+				<g:RadioButton name="new name" text="Draw in map" ui:field="draw_radio" checked="true"/>
+			</g:HorizontalPanel>
+			<g:TextArea ui:field="coord_text"/>
+			<g:Button ui:field="submit_coord" text="Submit"/>
+		</g:VerticalPanel>		
+</ui:UiBinder> 

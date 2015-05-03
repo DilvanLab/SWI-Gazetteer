@@ -1,0 +1,555 @@
+/**
+ *
+ *   Copyright 2014 sourceforge.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+package br.usp.icmc.gazetteer.client.view.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.gwtopenmaps.openlayers.client.LonLat;
+import org.gwtopenmaps.openlayers.client.Map;
+import org.gwtopenmaps.openlayers.client.MapOptions;
+import org.gwtopenmaps.openlayers.client.MapWidget;
+import org.gwtopenmaps.openlayers.client.Projection;
+import org.gwtopenmaps.openlayers.client.Style;
+import org.gwtopenmaps.openlayers.client.StyleMap;
+import org.gwtopenmaps.openlayers.client.control.DrawFeature;
+import org.gwtopenmaps.openlayers.client.control.DrawFeatureOptions;
+import org.gwtopenmaps.openlayers.client.control.LayerSwitcher;
+import org.gwtopenmaps.openlayers.client.control.MousePosition;
+import org.gwtopenmaps.openlayers.client.control.MousePositionOptions;
+import org.gwtopenmaps.openlayers.client.control.MousePositionOutput;
+import org.gwtopenmaps.openlayers.client.control.OverviewMap;
+import org.gwtopenmaps.openlayers.client.control.ScaleLine;
+import org.gwtopenmaps.openlayers.client.control.SelectFeature;
+import org.gwtopenmaps.openlayers.client.event.FeatureHighlightedListener;
+import org.gwtopenmaps.openlayers.client.event.VectorFeatureSelectedListener;
+import org.gwtopenmaps.openlayers.client.feature.VectorFeature;
+import org.gwtopenmaps.openlayers.client.filter.ComparisonFilter;
+import org.gwtopenmaps.openlayers.client.filter.ComparisonFilter.Types;
+import org.gwtopenmaps.openlayers.client.geometry.Point;
+import org.gwtopenmaps.openlayers.client.handler.PathHandler;
+import org.gwtopenmaps.openlayers.client.handler.PathHandlerOptions;
+import org.gwtopenmaps.openlayers.client.handler.PointHandler;
+import org.gwtopenmaps.openlayers.client.handler.PolygonHandler;
+import org.gwtopenmaps.openlayers.client.layer.TransitionEffect;
+import org.gwtopenmaps.openlayers.client.layer.Vector;
+import org.gwtopenmaps.openlayers.client.layer.VectorOptions;
+import org.gwtopenmaps.openlayers.client.layer.WMS;
+import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
+import org.gwtopenmaps.openlayers.client.layer.WMSParams;
+import org.gwtopenmaps.openlayers.client.popup.FramedCloud;
+import org.gwtopenmaps.openlayers.client.popup.Popup;
+import org.gwtopenmaps.openlayers.client.strategy.AnimatedClusterStrategy;
+import org.gwtopenmaps.openlayers.client.strategy.AnimatedClusterStrategyOptions;
+import org.gwtopenmaps.openlayers.client.strategy.Strategy;
+import org.gwtopenmaps.openlayers.client.style.Rule;
+import org.gwtopenmaps.openlayers.client.style.SymbolizerPoint;
+
+import br.usp.icmc.gazetteer.client.view.MapaView;
+import br.usp.icmc.gazetteer.shared.Locality;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
+
+public class Mapa extends Composite implements MapaView {
+	
+	private Presenter presenter;
+	
+	private static MapaUiBinder uiBinder = GWT.create(MapaUiBinder.class);
+	@UiField
+	VerticalPanel panel_map;
+	/**
+	 * Open layers buttons
+	 * 
+	 */
+	private Button rbNavigate = new Button("navigate");
+    private final Button rbDrawPoint = new Button("draw point");
+    private final Button rbDrawLine = new Button( "draw line");
+    private final Button rbDrawPolygon = new Button("draw polygon");
+    private final Button cbClickOut = new Button("Delete geometry");
+    private DrawFeature drawPointFeatureControl = null;
+    private DrawFeature drawLineFeatureControl = null;
+    private DrawFeature drawPolygonFeatureControl = null;
+    private SelectFeature deleteFeatureControl = null; //deleting is realized using a SelectFeature control
+    
+    private static  Map map;
+    private Vector vectorFeature;
+    
+    private final Vector vectorGeo = new Vector("Geometry");
+	private HorizontalPanel components = new  HorizontalPanel();
+
+	private  List<Point> points = new ArrayList<Point>();
+	 
+	interface MapaUiBinder extends UiBinder<Widget, Mapa> {
+	}
+
+	public Mapa() {
+		initWidget(uiBinder.createAndBindUi(this));
+		
+	}
+	@Override
+	public String getGeometry(){
+		String value="";
+		if(vectorGeo.getFeatures().length>1)
+			return "invalido";
+		for(VectorFeature v: vectorGeo.getFeatures()){
+			value = v.getGeometry().toString();
+		}
+		return value;
+	}
+	
+	public List<Point> getPoints() {
+		return points;
+	}
+
+	public void PointsFromServer(List<Float[]> points) {
+		 for(Float s[]: points){
+			this.points.add(new Point(s[0],s[1]));
+		}
+	}
+
+	public  HorizontalPanel getComponents(){
+		return components;
+	}
+	
+	public void buildPanel() {	
+		// create controls
+
+        // create some MapOptions
+        MapOptions defaultMapOptions = new MapOptions();
+        defaultMapOptions.setDisplayProjection(new Projection("EPSG:4326")); //causes the mouse popup to display coordinates in this format     
+        defaultMapOptions.setNumZoomLevels(16);
+         
+        // Create a MapWidget
+        MapWidget mapWidget = new MapWidget("100%", "100%", defaultMapOptions);
+         
+        
+        
+        // Create a WMS layer as base layer
+        WMSParams wmsParams = new WMSParams();
+        wmsParams.setFormat("image/png");
+        wmsParams.setLayers("basic");
+        wmsParams.setStyles("");
+ 
+        WMSOptions wmsLayerParams = new WMSOptions();
+        wmsLayerParams.setUntiled();
+        wmsLayerParams.setTransitionEffect(TransitionEffect.RESIZE);
+ 
+        String wmsUrl = "http://vmap0.tiles.osgeo.org/wms/vmap0";
+        WMS wmsLayer = new WMS("Basic WMS", wmsUrl, wmsParams, wmsLayerParams);
+       
+        // Add the WMS to the map
+        map = mapWidget.getMap();
+        map.addLayer(wmsLayer);
+        
+        Rule[] rules = new Rule[3];
+        
+        rules[0] = new Rule();
+        ComparisonFilter filter0 = new ComparisonFilter();
+        filter0.setType(Types.LESS_THAN);
+        filter0.setProperty("count");
+        filter0.setNumberValue(5);
+  
+        SymbolizerPoint symbolizer0 = new SymbolizerPoint();
+        symbolizer0.setFillColor("green");
+        symbolizer0.setFillOpacity(0.9);
+        symbolizer0.setStrokeColor("green");
+        symbolizer0.setStrokeOpacity(0.5);
+        symbolizer0.setStrokeWidth(12);
+        symbolizer0.setPointRadius(10);
+        rules[0].setFilter(filter0);
+        rules[0].setSymbolizer(symbolizer0);
+         
+        rules[1] = new Rule();
+        ComparisonFilter filter1 = new ComparisonFilter();
+        filter1.setType(Types.BETWEEN);
+        filter1.setProperty("count");
+        filter1.setNumberLowerBoundary(5);
+        filter1.setNumberUpperBoundary(20);
+        SymbolizerPoint symbolizer1 = new SymbolizerPoint();
+        symbolizer1.setFillColor("orange");
+        symbolizer1.setFillOpacity(0.9);
+        symbolizer1.setStrokeColor("orange");
+        symbolizer1.setStrokeOpacity(0.5);
+        symbolizer1.setStrokeWidth(12);
+        symbolizer1.setPointRadius(10);
+        rules[1].setFilter(filter1);
+        rules[1].setSymbolizer(symbolizer1);
+         
+        rules[2] = new Rule();
+        ComparisonFilter filter2 = new ComparisonFilter();
+        filter2.setType(Types.GREATER_THAN);
+        filter2.setProperty("count");
+        filter2.setNumberValue(20);
+        SymbolizerPoint symbolizer2 = new SymbolizerPoint();
+        symbolizer2.setFillColor("red");
+        symbolizer2.setFillOpacity(0.9);
+        symbolizer2.setStrokeColor("red");
+        symbolizer2.setStrokeOpacity(0.5);
+        symbolizer2.setStrokeWidth(12);
+        symbolizer2.setPointRadius(10);
+        rules[2].setFilter(filter2);
+        rules[2].setSymbolizer(symbolizer2);
+ 
+        Style style = new Style();
+        style.setLabel("${count}");
+        style.setFontColor("#FFFFFF");
+        style.setFontSize("20px");
+         
+        final StyleMap styleMap = new StyleMap(style);
+        styleMap.addRules(rules, "default");
+ 
+       
+ 
+        AnimatedClusterStrategy animatedClusterStrategy = new AnimatedClusterStrategy(new AnimatedClusterStrategyOptions());
+        VectorOptions vectorOptions = new VectorOptions();
+        vectorOptions.setStrategies(new Strategy[]{animatedClusterStrategy});
+        vectorOptions.setRenderers(new String[]{"Canvas", "SVG"});
+        final Vector vectorLayer = new Vector("Clusters", vectorOptions);
+        
+        
+
+        animatedClusterStrategy.setDistance(20);
+        animatedClusterStrategy.setThreshold(10);
+        /**
+         * CLUSTER ANIMATED
+         */
+        
+   
+      //GET THE POLYGONS
+        System.out.println(getPoints().size());
+    if(getPoints().size()>0){    
+    
+	        VectorFeature[] features = new VectorFeature[points.size()];
+	        for (int i = 0 ; i< points.size() ; i++) {
+	            features[i] = new VectorFeature(points.get(i));
+	        }
+	   
+	        animatedClusterStrategy.setFeatures(features);
+	        for (Point point : points)
+	        	vectorLayer.addFeature(new VectorFeature(point));
+
+	        vectorLayer.setStyleMap(styleMap);
+	        map.addLayer(vectorLayer);
+    	}
+ 
+        //Lets add some default controls to the map
+        map.addControl(new LayerSwitcher()); //+ sign in the upperright corner to display the layer switcher
+        map.addControl(new OverviewMap()); //+ sign in the lowerright to display the overviewmap
+        map.addControl(new ScaleLine()); //Display the scaleline
+ 
+        
+        /**
+         * END CLUSTER ANIMATED
+         * Mouse position in map
+         */
+        MousePositionOutput mpOut = new MousePositionOutput() {
+            @Override
+            public String format(LonLat lonLat, Map map) {
+                String out = "";
+                out += "long: ";
+                out += lonLat.lon();
+                out += " lat: ";
+                out += lonLat.lat();
+ 
+                return out;
+            }
+        };
+ 
+        MousePositionOptions mpOptions = new MousePositionOptions();
+        mpOptions.setFormatOutput(mpOut); // rename to setFormatOutput
+ 
+        map.addControl(new MousePosition(mpOptions));
+ 
+        // Create the draw controls
+        addPoint(map);
+        addLineString(map);
+        addPolygon(map);
+        deleteFeatures(map);
+      
+        // Lets add some default controls to the map
+        map.addControl(new LayerSwitcher()); // + sign in the upperright corner to display the layer switcher
+        map.addControl(new OverviewMap()); // + sign in the lowerright to display the overviewmap
+        map.addControl(new ScaleLine()); // Display the scaleline
+ 
+        // Center and zoom to a location
+        map.setCenter(new LonLat(-60, -3), 5);
+  
+        
+      //ADD POINTS LAYER
+        vectorFeature = new Vector("popups");
+		map.addLayer(vectorFeature);
+        
+        
+        components.add(rbNavigate);
+        components.add(rbDrawPoint);
+        components.add(rbDrawLine);
+        components.add(rbDrawPolygon);
+        components.add(cbClickOut);
+        final HorizontalPanel hpCbClickOut = new HorizontalPanel();
+        hpCbClickOut.add(new HTML("         "));
+        components.add(hpCbClickOut);
+        panel_map.add(mapWidget);
+     // now we want a popup to appear when user clicks
+        // First create a select control and make sure it is actived
+        SelectFeature selectFeature = new SelectFeature(vectorLayer);
+        selectFeature.setAutoActivate(true);
+        map.addControl(selectFeature);
+      
+        
+        rbNavigate.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+            	desativeAll();
+            }
+        });
+        rbDrawPoint.addClickHandler(new ClickHandler() {
+        	 public void onClick(ClickEvent event) {
+        		 desativeAll();
+        		 drawPointFeatureControl.activate();
+             }
+        });
+        rbDrawLine.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				desativeAll();
+				drawLineFeatureControl.activate();
+				
+			}
+		});
+        rbDrawPolygon.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				desativeAll();
+				drawPolygonFeatureControl.activate();				
+			}
+		});
+        cbClickOut.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				desativeAll();
+				deleteFeatureControl.activate();
+			}
+		});
+ 
+        mapWidget.getElement().getFirstChildElement().getStyle().setZIndex(0); // force the map to fall behind popups
+   
+        DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
+	   }
+
+	private void deleteFeatures(Map map){
+		 deleteFeatureControl = new SelectFeature(vectorGeo);
+	        map.addControl(deleteFeatureControl);
+	        deleteFeatureControl.addFeatureHighlightedListener(new FeatureHighlightedListener() {
+	            public void onFeatureHighlighted(VectorFeature vectorFeature) {
+	                //if you want to do WFS-T do the following :
+	                //vectorFeature.toState(State.Unknown);
+	                //vectorFeature.toState(State.Delete);
+	            	vectorFeature.destroy(); //don't do this if you want to use WFS-T
+	            }
+	        });
+		
+	}
+	
+	private void addPolygon(Map map){
+		
+		PolygonHandler pathHanlder = new PolygonHandler();
+	    // Create the DrawFeature control to draw on the map, and pass the DrawFeatureOptions to control the style of the sketch
+		drawPolygonFeatureControl = new DrawFeature(vectorGeo, pathHanlder);
+	    map.addLayer(vectorGeo);
+	    map.addControl(drawPolygonFeatureControl);
+	}
+	
+	private void addPoint(Map map){
+		 	
+		 	PointHandler pathHanlder = new PointHandler();
+		    // Create the DrawFeature control to draw on the map, and pass the DrawFeatureOptions to control the style of the sketch
+		    drawPointFeatureControl = new DrawFeature(vectorGeo, pathHanlder);
+		    map.addLayer(vectorGeo);
+		    map.addControl(drawPointFeatureControl);
+	}
+	
+	
+	private void addLineString( Map map){
+		 final Style drawStyle = new Style(); //create a Style to use
+		    drawStyle.setFillColor("white");
+		    drawStyle.setGraphicName("x");
+		    drawStyle.setPointRadius(4);
+		    drawStyle.setStrokeWidth(3);
+		    drawStyle.setStrokeColor("#66FFFF");
+		    drawStyle.setStrokeDashstyle("dash");
+
+		    //create a StyleMap using the Style
+		    StyleMap drawStyleMap = new StyleMap(drawStyle);
+
+		    //Create PathHanlderOptions using this StyleMap
+		    PathHandlerOptions phOpt = new PathHandlerOptions();
+		    phOpt.setStyleMap(drawStyleMap);   
+
+		    //Create DrawFeatureOptions and set the PathHandlerOptions (that have the StyleMap, that have the Style we wish)
+		    DrawFeatureOptions drawFeatureOptions = new DrawFeatureOptions();
+		    drawFeatureOptions.setHandlerOptions(phOpt);
+
+		    PathHandler pathHanlder = new PathHandler();
+
+		    // Create the DrawFeature control to draw on the map, and pass the DrawFeatureOptions to control the style of the sketch
+		    drawLineFeatureControl = new DrawFeature(vectorGeo, pathHanlder, drawFeatureOptions);
+		    map.addLayer(vectorGeo);
+		    map.addControl(drawLineFeatureControl);
+		   
+	}
+	
+	private void desativeAll(){
+		if(drawPointFeatureControl.isActive())
+			drawPointFeatureControl.deactivate();
+		if(drawLineFeatureControl.isActive())
+			drawLineFeatureControl.deactivate();
+		if(drawPolygonFeatureControl.isActive())
+			drawPolygonFeatureControl.deactivate();
+		if(deleteFeatureControl.isActive())
+			deleteFeatureControl.deactivate();
+	}
+	
+   
+	@Override
+	public void setName(String helloName) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setPresenter(Presenter listener) {
+		this.presenter = listener;
+		
+	}
+
+	@Override
+	public void buildMap() {
+			buildPanel();
+			
+	}
+
+	
+	
+	@Override
+	public void clear() {
+		this.panel_map.clear();
+		this.components.clear();
+		
+	}
+
+	@Override
+	public HorizontalPanel getComponets() {
+		return this.components;
+	}
+
+	@Override
+	public void callServerPoints() {
+		if(presenter!=null){
+	       	System.out.println("Entrou no presenter");
+	       	presenter.cluster();
+	     }
+		
+	}
+	
+	
+	 public float transformFloat(String numero) {
+	        float valor = 0;
+	        char n[] = numero.toCharArray();
+	        numero = "";
+	        for (int i = 0; i < n.length; i++) {
+	            if (n[i] == ',') {
+	                numero += ".";
+	            }
+	            numero += n[i];
+	        }
+	        try {
+	            valor = Float.parseFloat(numero);
+	        } catch (Exception e) {
+	            return 0;
+	        }
+	        return valor;
+	    }
+	 
+	
+	@Override
+	public void showGeometry(final Locality locality) {
+	//  Window.alert("SHOW GEOMETRY");
+		vectorFeature.removeAllFeatures();
+		vectorFeature.redraw();
+		map.getLayerByName("Clusters").setIsVisible(false);
+	   	map.getLayerByName("Clusters").redraw();
+	   
+	   		
+		String value = locality.getGeometry();
+    	double x = transformFloat(value.split(" ")[0]);
+    	double y = transformFloat(value.split(" ")[1]);
+		//Window.alert("GEO: "+x+"  "+y);
+		Point point = new Point(y,x);
+	   
+		
+		/////////////////////////////////////////
+		final VectorFeature vf1 =  new VectorFeature(point);
+	   	vectorFeature.addFeature(vf1);
+	    SelectFeature selectFeature = new SelectFeature(vectorFeature);
+        selectFeature.setAutoActivate(true);
+        map.addControl(selectFeature);
+	   	vectorFeature.redraw();
+	   	map.updateSize();
+		Popup popup = new FramedCloud("id1", vf1.getCenterLonLat(), null, locality.getLocality(), null, true);
+	      popup.setPanMapIfOutOfView(true); // this set the popup in a
+	                                        // strategic way, and pans the
+	                                        // map if needed.
+	  //    
+	      popup.setAutoSize(true);
+	      vf1.setPopup(popup);
+	      vf1.setPopup(popup);
+//
+	      // And attach the popup to the map
+	      map.addPopup(vf1.getPopup());
+	      
+	  vectorFeature.addVectorFeatureSelectedListener(new VectorFeatureSelectedListener(){
+	  public void onFeatureSelected(FeatureSelectedEvent eventObject)
+	  {
+		//   Window.alert("MOSTRAR POPUP BEFORE");
+	  
+	    //  popup.show();
+	    //  Window.alert("MOSTRAR POPUP");
+	  }
+	  });
+		
+	}
+
+    
+}
+
+//// Secondly add a VectorFeatureSelectedListener to the feature
+//
+
