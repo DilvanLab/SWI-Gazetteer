@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 import br.usp.icmc.gazetteer.TAD.Place;
 import br.usp.icmc.gazetteer.TAD.Repository;
 import br.usp.icmc.gazetteer.cluster.Star_algorithm;

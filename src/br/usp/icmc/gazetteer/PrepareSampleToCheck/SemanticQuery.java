@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 
 import com.bbn.openmap.geo.OMGeo;
 import com.bbn.openmap.geo.OMGeo.Polygon;

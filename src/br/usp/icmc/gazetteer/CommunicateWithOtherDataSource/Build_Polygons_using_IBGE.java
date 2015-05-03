@@ -19,13 +19,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 import br.usp.icmc.gazetteer.TAD.County;
 import br.usp.icmc.gazetteer.TAD.Place;
 import br.usp.icmc.gazetteer.cluster.Star_algorithm;
 
 import com.bbn.openmap.geo.Geo;
-import com.bbn.openmap.geo.OMGeo;
 import com.vividsolutions.jump.feature.BasicFeature;
 import com.vividsolutions.jump.feature.FeatureCollection;
 import com.vividsolutions.jump.io.CompressedFile;
@@ -36,8 +35,6 @@ import com.vividsolutions.jump.io.JMLReader;
 
 public class Build_Polygons_using_IBGE {
 
-	private static final int today = 2015;
-	
 	public static FeatureCollection read_IBGE(String path)throws Exception{
 
 		String extension;

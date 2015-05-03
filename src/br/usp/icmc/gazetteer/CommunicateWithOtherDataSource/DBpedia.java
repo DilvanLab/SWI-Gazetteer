@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 import br.usp.icmc.gazetteer.TAD.County;
 import br.usp.icmc.gazetteer.TAD.Place;
 import br.usp.icmc.gazetteer.cluster.Similarity;

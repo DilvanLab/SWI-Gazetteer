@@ -41,6 +41,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 import br.usp.icmc.gazetteer.CommunicateWithOtherDataSource.Build_Polygons_using_IBGE;
 import br.usp.icmc.gazetteer.CommunicateWithOtherDataSource.DBpedia;
 import br.usp.icmc.gazetteer.CommunicateWithOtherDataSource.Geonames;
@@ -56,7 +57,6 @@ import br.usp.icmc.gazetteer.TAD.County;
 import br.usp.icmc.gazetteer.TAD.Group;
 import br.usp.icmc.gazetteer.TAD.Place;
 import br.usp.icmc.gazetteer.cluster.Star_algorithm;
-import analyze_geographical_coordinates.Out_Polygon;
 
 public class Test {
 	

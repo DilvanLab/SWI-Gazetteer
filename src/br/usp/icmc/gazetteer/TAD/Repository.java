@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 
 import com.bbn.openmap.geo.Geo;
 import com.bbn.openmap.geo.OMGeo;

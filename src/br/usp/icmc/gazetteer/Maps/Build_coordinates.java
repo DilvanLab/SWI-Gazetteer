@@ -23,7 +23,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-import analyze_geographical_coordinates.Out_Polygon;
+import br.usp.icmc.gazetteer.AnalyzeGeographicalCoordinates.Out_Polygon;
 import br.usp.icmc.gazetteer.TAD.Place;
 
 import com.bbn.openmap.geo.OMGeo;
