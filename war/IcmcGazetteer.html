@@ -32,6 +32,14 @@
 <!--                                           -->
 <script type="text/javascript" language="javascript"
 	src="icmcgazetteer/icmcgazetteer.nocache.js"></script>
+	
+<script>
+var map = new OpenLayers.Map('mapbox');
+window.onresize = function()
+{
+  setTimeout( function() { map.updateSize();}, 200);
+}
+</script>
 </head>
 
 <!--                                           -->

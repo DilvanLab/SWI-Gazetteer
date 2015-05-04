@@ -23,6 +23,7 @@ import org.gwtopenmaps.openlayers.client.LonLat;
 import org.gwtopenmaps.openlayers.client.Map;
 import org.gwtopenmaps.openlayers.client.MapOptions;
 import org.gwtopenmaps.openlayers.client.MapWidget;
+import org.gwtopenmaps.openlayers.client.OpenLayers;
 import org.gwtopenmaps.openlayers.client.Projection;
 import org.gwtopenmaps.openlayers.client.Style;
 import org.gwtopenmaps.openlayers.client.StyleMap;
@@ -68,6 +69,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
@@ -139,14 +142,15 @@ public class Mapa extends Composite implements MapaView {
 	
 	public void buildPanel() {	
 		// create controls
-
+		OpenLayers.setProxyHost("olproxy?targetURL=");
+		 
         // create some MapOptions
         MapOptions defaultMapOptions = new MapOptions();
         defaultMapOptions.setDisplayProjection(new Projection("EPSG:4326")); //causes the mouse popup to display coordinates in this format     
         defaultMapOptions.setNumZoomLevels(16);
-         
+
         // Create a MapWidget
-        MapWidget mapWidget = new MapWidget("100%", "100%", defaultMapOptions);
+        MapWidget mapWidget = new MapWidget(""+this.getParent().getOffsetWidth(), ""+this.getParent().getOffsetHeight(), defaultMapOptions);
          
         
         
@@ -155,7 +159,7 @@ public class Mapa extends Composite implements MapaView {
         wmsParams.setFormat("image/png");
         wmsParams.setLayers("basic");
         wmsParams.setStyles("");
- 
+        
         WMSOptions wmsLayerParams = new WMSOptions();
         wmsLayerParams.setUntiled();
         wmsLayerParams.setTransitionEffect(TransitionEffect.RESIZE);
@@ -360,7 +364,10 @@ public class Mapa extends Composite implements MapaView {
 		});
  
         mapWidget.getElement().getFirstChildElement().getStyle().setZIndex(0); // force the map to fall behind popups
-   
+        map.updateSize();
+        map.zoomIn();
+        map.getViewport().scrollIntoView();
+        
         DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
 	   }
 

@@ -32,7 +32,7 @@ public class Search extends Composite implements SearchView{
 	}
 	
 	private void build_querys(){
-		search_text.addItem("reservas proximas ha 100 km da cidade de Manaus");
+		search_text.addItem("reservas proximas a 100 km da cidade de Manaus");
 		search_text.addItem("Campo da Catuquira");
 		search_text.addItem("Locais dentro do Parque Nacional do Jau");
 		search_text.addItem("Rios do estado do amazonas");
