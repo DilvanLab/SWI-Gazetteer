@@ -78,12 +78,11 @@ PlaceInformationView.Presenter, GraphView.Presenter {
 		main.getInfo().add(clientFactory.getPlaceInformationView().asWidget());
 		main.getInsertAndGraph().add(clientFactory.getInsertPlaceView().asWidget());
 		main.getMap().add(clientFactory.getMapaView().asWidget());
-		clientFactory.getInsertPlaceView().callOntTypeServer();
-		
+		clientFactory.getInsertPlaceView().callOntTypeServer();		
 		clientFactory.getMapaView().clear();
 		clientFactory.getMapaView().callServerPoints();
 		clientFactory.getPrincipalView().getButtonMap().add(clientFactory.getMapaView().getComponets().asWidget());
-		
+		clientFactory.getBottomView().callInfoServer();
 		panel.setWidget(main.asWidget());
 	}
 
@@ -112,25 +111,21 @@ PlaceInformationView.Presenter, GraphView.Presenter {
 		//[locality] [geometry] [agreeCoord] [county] [contributors][date][link]
 		PrincipalView main = clientFactory.getPrincipalView();
 		VerticalPanel temp = new VerticalPanel();
-		System.out.println(">>>>>>>>>>>>>>>>>>>>"+locality.getGeometry());
+	
 		if(locality.getGeometry()!=null && !locality.getGeometry().equals("")){
 			main.getInsertAndGraph().clear();
 			int agrement= locality.getAgreeCoordinate();
-						
 			int contributor = locality.getContributors();
-			System.out.println("Vai criar o grafico");
 			clientFactory.getGraphView().setPresenter(this);
 			clientFactory.getGraphView().setValues(agrement, contributor);
 			clientFactory.getGraphView().initialize();
 			main.getInsertAndGraph().add(clientFactory.getGraphView().asWidget());
-			
 			clientFactory.getMapaView().showGeometry(locality);
 		}else{
 			this.setInfoPlace(locality);
 		}
 		main.getInfo().clear();
 		temp.add(clientFactory.getPlaceInformationView().asWidget());		
-		clientFactory.getBottomView().callInfoServer();
 		temp.add(clientFactory.getBottomView().asWidget());
 		main.getInfo().add(temp.asWidget());
 		this.setInfomation(locality);

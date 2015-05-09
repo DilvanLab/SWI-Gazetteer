@@ -193,7 +193,7 @@ public class GazetteerServiceImpl extends RemoteServiceServlet implements Gazett
 		parameters.add("triplas");
 		List<Locality> result = new ArrayList<Locality>();
 		System.out.println(search);
-		if(search.equals("reservas proximas ha 100 km da cidade de Manaus")){
+		if(search.equals("reservas proximas a 100 km da cidade de Manaus")){
 			
 			String queryString = "";
 			String path = "files"+File.separator+"query1.txt";

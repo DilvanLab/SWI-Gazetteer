@@ -46,6 +46,10 @@ import org.gwtopenmaps.openlayers.client.handler.PathHandler;
 import org.gwtopenmaps.openlayers.client.handler.PathHandlerOptions;
 import org.gwtopenmaps.openlayers.client.handler.PointHandler;
 import org.gwtopenmaps.openlayers.client.handler.PolygonHandler;
+import org.gwtopenmaps.openlayers.client.layer.GoogleV3;
+import org.gwtopenmaps.openlayers.client.layer.GoogleV3MapType;
+import org.gwtopenmaps.openlayers.client.layer.GoogleV3Options;
+import org.gwtopenmaps.openlayers.client.layer.OSM;
 import org.gwtopenmaps.openlayers.client.layer.TransitionEffect;
 import org.gwtopenmaps.openlayers.client.layer.Vector;
 import org.gwtopenmaps.openlayers.client.layer.VectorOptions;
@@ -103,6 +107,8 @@ public class Mapa extends Composite implements MapaView {
     private static  Map map;
     private Vector vectorFeature;
     
+    private List<Popup> popup = new ArrayList<Popup>();
+    
     private final Vector vectorGeo = new Vector("Geometry");
 	private HorizontalPanel components = new  HorizontalPanel();
 
@@ -121,7 +127,8 @@ public class Mapa extends Composite implements MapaView {
 		if(vectorGeo.getFeatures().length>1)
 			return "invalido";
 		for(VectorFeature v: vectorGeo.getFeatures()){
-			value = v.getGeometry().toString();
+			 v.getGeometry().transform(new Projection(map.getProjection()),DEFAULT_PROJECTION);
+			 value =v.getGeometry().toString();
 		}
 		return value;
 	}
@@ -139,178 +146,93 @@ public class Mapa extends Composite implements MapaView {
 	public  HorizontalPanel getComponents(){
 		return components;
 	}
+	private static final Projection DEFAULT_PROJECTION = new Projection("EPSG:4326");
 	
-	public void buildPanel() {	
-		// create controls
-		OpenLayers.setProxyHost("olproxy?targetURL=");
-		 
-        // create some MapOptions
+	
+	@SuppressWarnings("deprecation")
+	public void buildPanel() {
         MapOptions defaultMapOptions = new MapOptions();
-        defaultMapOptions.setDisplayProjection(new Projection("EPSG:4326")); //causes the mouse popup to display coordinates in this format     
         defaultMapOptions.setNumZoomLevels(16);
 
-        // Create a MapWidget
-        MapWidget mapWidget = new MapWidget(""+this.getParent().getOffsetWidth(), ""+this.getParent().getOffsetHeight(), defaultMapOptions);
-         
+        //Create a MapWidget and add 2 OSM layers
+        MapWidget mapWidget = new MapWidget(this.getParent().getOffsetWidth()+"px", this.getParent().getOffsetHeight()+"px", defaultMapOptions);
         
+        GoogleV3Options gSatelliteOptions = new GoogleV3Options();
+		gSatelliteOptions.setIsBaseLayer(true);
+		gSatelliteOptions.setType(GoogleV3MapType.G_HYBRID_MAP);
+		final GoogleV3 gSatellite = new GoogleV3("Google Satellite",gSatelliteOptions);
         
-        // Create a WMS layer as base layer
-        WMSParams wmsParams = new WMSParams();
-        wmsParams.setFormat("image/png");
-        wmsParams.setLayers("basic");
-        wmsParams.setStyles("");
+		//MAP SERVERS 
+        final OSM osm_1 = OSM.Mapnik("Mapnik");
+        final OSM osm_2 = OSM.CycleMap("CycleMap");
+        osm_1.setIsBaseLayer(true);
+        osm_2.setIsBaseLayer(true);
+        gSatellite.setIsBaseLayer(true);
         
-        WMSOptions wmsLayerParams = new WMSOptions();
-        wmsLayerParams.setUntiled();
-        wmsLayerParams.setTransitionEffect(TransitionEffect.RESIZE);
- 
-        String wmsUrl = "http://vmap0.tiles.osgeo.org/wms/vmap0";
-        WMS wmsLayer = new WMS("Basic WMS", wmsUrl, wmsParams, wmsLayerParams);
-       
-        // Add the WMS to the map
         map = mapWidget.getMap();
-        map.addLayer(wmsLayer);
-        
-        Rule[] rules = new Rule[3];
-        
-        rules[0] = new Rule();
-        ComparisonFilter filter0 = new ComparisonFilter();
-        filter0.setType(Types.LESS_THAN);
-        filter0.setProperty("count");
-        filter0.setNumberValue(5);
-  
-        SymbolizerPoint symbolizer0 = new SymbolizerPoint();
-        symbolizer0.setFillColor("green");
-        symbolizer0.setFillOpacity(0.9);
-        symbolizer0.setStrokeColor("green");
-        symbolizer0.setStrokeOpacity(0.5);
-        symbolizer0.setStrokeWidth(12);
-        symbolizer0.setPointRadius(10);
-        rules[0].setFilter(filter0);
-        rules[0].setSymbolizer(symbolizer0);
-         
-        rules[1] = new Rule();
-        ComparisonFilter filter1 = new ComparisonFilter();
-        filter1.setType(Types.BETWEEN);
-        filter1.setProperty("count");
-        filter1.setNumberLowerBoundary(5);
-        filter1.setNumberUpperBoundary(20);
-        SymbolizerPoint symbolizer1 = new SymbolizerPoint();
-        symbolizer1.setFillColor("orange");
-        symbolizer1.setFillOpacity(0.9);
-        symbolizer1.setStrokeColor("orange");
-        symbolizer1.setStrokeOpacity(0.5);
-        symbolizer1.setStrokeWidth(12);
-        symbolizer1.setPointRadius(10);
-        rules[1].setFilter(filter1);
-        rules[1].setSymbolizer(symbolizer1);
-         
-        rules[2] = new Rule();
-        ComparisonFilter filter2 = new ComparisonFilter();
-        filter2.setType(Types.GREATER_THAN);
-        filter2.setProperty("count");
-        filter2.setNumberValue(20);
-        SymbolizerPoint symbolizer2 = new SymbolizerPoint();
-        symbolizer2.setFillColor("red");
-        symbolizer2.setFillOpacity(0.9);
-        symbolizer2.setStrokeColor("red");
-        symbolizer2.setStrokeOpacity(0.5);
-        symbolizer2.setStrokeWidth(12);
-        symbolizer2.setPointRadius(10);
-        rules[2].setFilter(filter2);
-        rules[2].setSymbolizer(symbolizer2);
- 
-        Style style = new Style();
-        style.setLabel("${count}");
-        style.setFontColor("#FFFFFF");
-        style.setFontSize("20px");
-         
-        final StyleMap styleMap = new StyleMap(style);
-        styleMap.addRules(rules, "default");
- 
-       
- 
-        AnimatedClusterStrategy animatedClusterStrategy = new AnimatedClusterStrategy(new AnimatedClusterStrategyOptions());
-        VectorOptions vectorOptions = new VectorOptions();
-        vectorOptions.setStrategies(new Strategy[]{animatedClusterStrategy});
-        vectorOptions.setRenderers(new String[]{"Canvas", "SVG"});
-        final Vector vectorLayer = new Vector("Clusters", vectorOptions);
-        
-        
 
-        animatedClusterStrategy.setDistance(20);
-        animatedClusterStrategy.setThreshold(10);
-        /**
-         * CLUSTER ANIMATED
-         */
+        map.addLayer(gSatellite);
+        map.addLayer(osm_2);
+        map.addLayer(osm_1);
+         //ADD POINTS LAYER
+        vectorFeature = new Vector("popups");
+		map.addLayer(vectorFeature);
         
-   
-      //GET THE POLYGONS
-        System.out.println(getPoints().size());
-    if(getPoints().size()>0){    
-    
-	        VectorFeature[] features = new VectorFeature[points.size()];
-	        for (int i = 0 ; i< points.size() ; i++) {
-	            features[i] = new VectorFeature(points.get(i));
-	        }
-	   
-	        animatedClusterStrategy.setFeatures(features);
-	        for (Point point : points)
-	        	vectorLayer.addFeature(new VectorFeature(point));
-
-	        vectorLayer.setStyleMap(styleMap);
-	        map.addLayer(vectorLayer);
-    	}
- 
         //Lets add some default controls to the map
         map.addControl(new LayerSwitcher()); //+ sign in the upperright corner to display the layer switcher
         map.addControl(new OverviewMap()); //+ sign in the lowerright to display the overviewmap
         map.addControl(new ScaleLine()); //Display the scaleline
- 
         
         /**
-         * END CLUSTER ANIMATED
          * Mouse position in map
          */
         MousePositionOutput mpOut = new MousePositionOutput() {
-            @Override
+             @Override
             public String format(LonLat lonLat, Map map) {
-                String out = "";
-                out += "long: ";
-                out += lonLat.lon();
-                out += " lat: ";
-                out += lonLat.lat();
- 
+            	 lonLat.transform(map.getProjection(),DEFAULT_PROJECTION.getProjectionCode()); //transform lonlat to OSM coordinate system
+            	
+            	 String out = "";
+            	if(map.getBaseLayer().getId().equals(gSatellite.getId()) || map.getBaseLayer().getId().equals(osm_2.getId())){
+	                 out += "<p id=\"mouseCoord\"> ";
+	                 out += lonLat.lat();
+	                 out += "   ";
+	                 out += lonLat.lon()+"</p>";
+            	}else {
+            		out += "<p id=\"normCoord\"> ";
+	                 out += lonLat.lat();
+	                 out += "   ";
+	                 out += lonLat.lon()+"</p>";
+            	}
                 return out;
             }
         };
- 
+        
         MousePositionOptions mpOptions = new MousePositionOptions();
+        
         mpOptions.setFormatOutput(mpOut); // rename to setFormatOutput
- 
         map.addControl(new MousePosition(mpOptions));
  
-        // Create the draw controls
-        addPoint(map);
-        addLineString(map);
-        addPolygon(map);
-        deleteFeatures(map);
-      
-        // Lets add some default controls to the map
-        map.addControl(new LayerSwitcher()); // + sign in the upperright corner to display the layer switcher
-        map.addControl(new OverviewMap()); // + sign in the lowerright to display the overviewmap
-        map.addControl(new ScaleLine()); // Display the scaleline
+        //Center and zoom to a location
+        LonLat lonLat = new LonLat(-58, -4);//6.95, 50.94);
+        lonLat.transform(DEFAULT_PROJECTION.getProjectionCode(),
+                         map.getProjection()); //transform lonlat to OSM coordinate system
+        map.setCenter(lonLat, 5);
  
-        // Center and zoom to a location
-        map.setCenter(new LonLat(-60, -3), 5);
-  
+        mapWidget.getElement().getFirstChildElement().getStyle().setZIndex(0); //force the map to fall behind popups
+        BuildCluster();
+        addButtons();
+        panel_map.add(mapWidget);
+        DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
+	}
+	
+	public void addButtons(){
+		
+		addPoint(map);
+		addLineString(map);
+		addPolygon(map);
+		deleteFeatures(map);
         
-      //ADD POINTS LAYER
-        vectorFeature = new Vector("popups");
-		map.addLayer(vectorFeature);
-        
-        
-        components.add(rbNavigate);
+		components.add(rbNavigate);
         components.add(rbDrawPoint);
         components.add(rbDrawLine);
         components.add(rbDrawPolygon);
@@ -318,13 +240,6 @@ public class Mapa extends Composite implements MapaView {
         final HorizontalPanel hpCbClickOut = new HorizontalPanel();
         hpCbClickOut.add(new HTML("         "));
         components.add(hpCbClickOut);
-        panel_map.add(mapWidget);
-     // now we want a popup to appear when user clicks
-        // First create a select control and make sure it is actived
-        SelectFeature selectFeature = new SelectFeature(vectorLayer);
-        selectFeature.setAutoActivate(true);
-        map.addControl(selectFeature);
-      
         
         rbNavigate.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
@@ -362,24 +277,107 @@ public class Mapa extends Composite implements MapaView {
 				deleteFeatureControl.activate();
 			}
 		});
- 
-        mapWidget.getElement().getFirstChildElement().getStyle().setZIndex(0); // force the map to fall behind popups
-        map.updateSize();
-        map.zoomIn();
-        map.getViewport().scrollIntoView();
-        
-        DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
-	   }
+
+	}
+	
+	public  final StyleMap ClusterRules(){
+      Rule[] rules = new Rule[3];
+      
+      rules[0] = new Rule();
+      ComparisonFilter filter0 = new ComparisonFilter();
+      filter0.setType(Types.LESS_THAN);
+      filter0.setProperty("count");
+      filter0.setNumberValue(5);
+
+      SymbolizerPoint symbolizer0 = new SymbolizerPoint();
+      symbolizer0.setFillColor("green");
+      symbolizer0.setFillOpacity(0.9);
+      symbolizer0.setStrokeColor("green");
+      symbolizer0.setStrokeOpacity(0.5);
+      symbolizer0.setStrokeWidth(12);
+      symbolizer0.setPointRadius(10);
+      rules[0].setFilter(filter0);
+      rules[0].setSymbolizer(symbolizer0);
+       
+      rules[1] = new Rule();
+      ComparisonFilter filter1 = new ComparisonFilter();
+      filter1.setType(Types.BETWEEN);
+      filter1.setProperty("count");
+      filter1.setNumberLowerBoundary(5);
+      filter1.setNumberUpperBoundary(20);
+      SymbolizerPoint symbolizer1 = new SymbolizerPoint();
+      symbolizer1.setFillColor("orange");
+      symbolizer1.setFillOpacity(0.9);
+      symbolizer1.setStrokeColor("orange");
+      symbolizer1.setStrokeOpacity(0.5);
+      symbolizer1.setStrokeWidth(12);
+      symbolizer1.setPointRadius(10);
+      rules[1].setFilter(filter1);
+      rules[1].setSymbolizer(symbolizer1);
+       
+      rules[2] = new Rule();
+      ComparisonFilter filter2 = new ComparisonFilter();
+      filter2.setType(Types.GREATER_THAN);
+      filter2.setProperty("count");
+      filter2.setNumberValue(20);
+      SymbolizerPoint symbolizer2 = new SymbolizerPoint();
+      symbolizer2.setFillColor("red");
+      symbolizer2.setFillOpacity(0.9);
+      symbolizer2.setStrokeColor("red");
+      symbolizer2.setStrokeOpacity(0.5);
+      symbolizer2.setStrokeWidth(12);
+      symbolizer2.setPointRadius(10);
+      rules[2].setFilter(filter2);
+      rules[2].setSymbolizer(symbolizer2);
+
+      Style style = new Style();
+      style.setLabel("${count}");
+      style.setFontColor("#FFFFFF");
+      style.setFontSize("20px");
+       
+      StyleMap  styleMap = new StyleMap(style);
+      styleMap.addRules(rules, "default");
+     
+      return styleMap;
+	}
+	
+	
+	public void BuildCluster(){
+		/**
+	       * CLUSTER ANIMATED
+	       */
+	  AnimatedClusterStrategy animatedClusterStrategy = new AnimatedClusterStrategy(new AnimatedClusterStrategyOptions());
+      VectorOptions vectorOptions = new VectorOptions();
+      vectorOptions.setStrategies(new Strategy[]{animatedClusterStrategy});
+      vectorOptions.setRenderers(new String[]{"Canvas", "SVG"});
+      final Vector vectorLayer = new Vector("Clusters", vectorOptions);
+      
+      animatedClusterStrategy.setDistance(20);
+      animatedClusterStrategy.setThreshold(10);
+       
+      //plot the points
+      VectorFeature[] features = new VectorFeature[points.size()];
+	  for (int i = 0 ; i< points.size() ; i++) {
+	         features[i] = new VectorFeature(points.get(i));
+	  }
+	   
+	  animatedClusterStrategy.setFeatures(features);
+	  for (Point point : points){
+		  point.transform(DEFAULT_PROJECTION,new Projection(map.getProjection()));
+	       vectorLayer.addFeature(new VectorFeature(point));
+	  }
+      vectorLayer.setStyleMap(ClusterRules());
+      map.addLayer(vectorLayer);
+
+	}
+	
 
 	private void deleteFeatures(Map map){
 		 deleteFeatureControl = new SelectFeature(vectorGeo);
 	        map.addControl(deleteFeatureControl);
 	        deleteFeatureControl.addFeatureHighlightedListener(new FeatureHighlightedListener() {
 	            public void onFeatureHighlighted(VectorFeature vectorFeature) {
-	                //if you want to do WFS-T do the following :
-	                //vectorFeature.toState(State.Unknown);
-	                //vectorFeature.toState(State.Delete);
-	            	vectorFeature.destroy(); //don't do this if you want to use WFS-T
+	               vectorFeature.destroy(); //don't do this if you want to use WFS-T
 	            }
 	        });
 		
@@ -508,7 +506,11 @@ public class Mapa extends Composite implements MapaView {
 	
 	@Override
 	public void showGeometry(final Locality locality) {
-	//  Window.alert("SHOW GEOMETRY");
+
+		for(Popup p:this.popup){
+			map.removePopup(p);
+		}
+		
 		vectorFeature.removeAllFeatures();
 		vectorFeature.redraw();
 		map.getLayerByName("Clusters").setIsVisible(false);
@@ -518,9 +520,9 @@ public class Mapa extends Composite implements MapaView {
 		String value = locality.getGeometry();
     	double x = transformFloat(value.split(" ")[0]);
     	double y = transformFloat(value.split(" ")[1]);
-		//Window.alert("GEO: "+x+"  "+y);
-		Point point = new Point(y,x);
-	   
+		LonLat lonLat = new LonLat(y, x);
+		lonLat.transform(DEFAULT_PROJECTION.getProjectionCode(), map.getProjection());
+		Point point = new Point(lonLat.lon(),lonLat.lat());
 		
 		/////////////////////////////////////////
 		final VectorFeature vf1 =  new VectorFeature(point);
@@ -531,27 +533,14 @@ public class Mapa extends Composite implements MapaView {
 	   	vectorFeature.redraw();
 	   	map.updateSize();
 		Popup popup = new FramedCloud("id1", vf1.getCenterLonLat(), null, locality.getLocality(), null, true);
-	      popup.setPanMapIfOutOfView(true); // this set the popup in a
-	                                        // strategic way, and pans the
-	                                        // map if needed.
-	  //    
-	      popup.setAutoSize(true);
-	      vf1.setPopup(popup);
-	      vf1.setPopup(popup);
-//
-	      // And attach the popup to the map
-	      map.addPopup(vf1.getPopup());
-	      
-	  vectorFeature.addVectorFeatureSelectedListener(new VectorFeatureSelectedListener(){
-	  public void onFeatureSelected(FeatureSelectedEvent eventObject)
-	  {
-		//   Window.alert("MOSTRAR POPUP BEFORE");
-	  
-	    //  popup.show();
-	    //  Window.alert("MOSTRAR POPUP");
-	  }
-	  });
-		
+		popup.setPanMapIfOutOfView(true); 
+	    popup.setAutoSize(true);
+		this.popup.add(popup);
+		for(Popup p:this.popup)
+			vf1.setPopup(p);
+	    
+		map.addPopup(vf1.getPopup());
+	  		
 	}
 
     
