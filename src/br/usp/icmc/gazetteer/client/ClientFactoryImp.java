@@ -154,6 +154,15 @@ public class ClientFactoryImp implements ClientFactory{
 	}
 
 
+	public boolean isDate(String date){
+		try{
+			Integer.parseInt(date);
+			return true;
+		}catch(Exception ex){
+			return false;
+		}
+	}
+	
 	public Locality getInfoLocality(){
 		String today = "2015"; // modificar para pegar a data corrente, (estou sem tempo agora)
 		Locality locality = null;
@@ -162,26 +171,28 @@ public class ClientFactoryImp implements ClientFactory{
 		}else{
 			locality = new Locality();
 		}
-		if(insertPlace.getInsertPlace().getCoord_text().getText().equalsIgnoreCase(""))
-			insertPlace.getInsertPlace().getCoord_text().setText(map.getGeometry());
-			
-		locality.setGeometry(map.getGeometry());
+		locality.setContributors(locality.getContributors()+1);
+		
+		if(insertPlace.getInsertPlace().getDraw_radio().getFormValue().equals("map")){
+			if(map.getGeometry().equals("invalido")){
+				Window.alert("Coordenadas invalidas");
+				return null;
+			}
+			locality.setGeometry(map.getGeometry());
+		}else
+			locality.setGeometry(insertPlace.getInsertPlace().getCoord_text().getText());
+				
 		
 		locality.setLocality(insertPlace.getInsertPlace().getPlace_name().getText());
 
-		if(locality.getDate().equals("") || locality.getDate()==null || locality.getDate().equals("invalido"))
+		if(!isDate(locality.getDate()))
 			locality.setDate(today);
-
-		locality.setContributors(locality.getContributors()+1);
-		if(locality.getAgreeCoordinate()>0)
-			locality.setAgreeCoordinate(locality.getAgreeCoordinate()-1);
-		
-		locality.setIdTriple(locality.getIdTriple());
+		locality.setCounty(insertPlace.getInsertPlace().getCounty().getText());
 		
 		int index = getInsertPlaceView().getInsertPlace().getOnty_type().getSelectedIndex();
 		if(index!=-1){
 			String type = getInsertPlaceView().getInsertPlace().getOnty_type().getItemText(index);
-			locality.setType(type);
+			locality.setType(type);			
 		}else{
 			locality.setType(locality.getType());
 		}
@@ -231,16 +242,13 @@ public class ClientFactoryImp implements ClientFactory{
 			public void agreeGraphSubmit(AgreeGraphEvent agreeGraphEvent) {
 				DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), " <img src=\"ajax-loader.gif\"  alt=\"loading\"> Loading, please wait... ");
 				RootPanel.get("GWT-Application_Panel");
+				final Locality locality= PrincipalActivity.locality;		
 				
-				final Locality locality= PrincipalActivity.locality;;
 				if(graph.trust()){
+					locality.setContributors(locality.getContributors()+1);
 					locality.setAgreeCoordinate(locality.getAgreeCoordinate()+1);
-				}else{
-					 locality.setAgreeCoordinate(locality.getAgreeCoordinate()-1);
-				}
-				locality.setContributors(locality.getContributors()+1);
 					rpc.agreeLinkedData(locality, new AsyncCallback<Void>() {
-	
+						
 						@Override
 						public void onFailure(Throwable caught) {
 							Window.alert("Cannot insert your information in the Database.");						
@@ -257,6 +265,38 @@ public class ClientFactoryImp implements ClientFactory{
 							PrincipalActivity.locality=null;		
 						}
 					});
+
+				}else{
+					 locality.setAgreeCoordinate(locality.getAgreeCoordinate()-1);
+					 int contri = locality.getContributors();
+					 int agree = locality.getAgreeCoordinate();
+					 if((agree/contri)<0.7){
+						 locality.setUpdateGeo(true);
+						 locality.setAgreeCoordinate(0);
+						 main.getInsertAndGraph().clear();						
+						 getInsertPlaceView().insertPlaceinfo(locality);
+						 main.getInsertAndGraph().add(insertPlace.asWidget());						 
+					 }else{
+							rpc.agreeLinkedData(locality, new AsyncCallback<Void>() {
+								
+								@Override
+								public void onFailure(Throwable caught) {
+									Window.alert("Cannot insert your information in the Database.");						
+								}
+			
+								@Override
+								public void onSuccess(Void result) {
+									Window.alert("Information inserted in the Database.");	
+									PrincipalView main = getPrincipalView();
+									main.getInsertAndGraph().clear();
+									getGraphView().setValues(locality.getAgreeCoordinate(), locality.getContributors());
+									getGraphView().initialize();
+									main.getInsertAndGraph().add(getGraphView().asWidget());
+									PrincipalActivity.locality=null;		
+								}
+							});
+					 }
+				}
 				
 				DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
 			}
@@ -270,9 +310,7 @@ public class ClientFactoryImp implements ClientFactory{
 				DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), " <img src=\"ajax-loader.gif\"  alt=\"loading\"> Loading, please wait... ");
 				RootPanel.get("GWT-Application_Panel");
 				
-				Locality locality=  PrincipalActivity.locality;
-				locality.setContributors(locality.getContributors()+1);
-				locality.setAgreeCoordinate(locality.getAgreeCoordinate()+1);
+				Locality locality= getInfoLocality();
 				
 				rpc.insertLocality(locality, new AsyncCallback<Integer>(){
 					@Override

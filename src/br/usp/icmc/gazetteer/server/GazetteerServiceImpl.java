@@ -17,11 +17,14 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.gwtopenmaps.openlayers.client.geometry.Point;
+
 import br.usp.icmc.gazetteer.client.GazetteerService;
 import br.usp.icmc.gazetteer.shared.Locality;
 import br.usp.icmc.gazetteer.shared.Out_Polygon;
 import br.usp.icmc.gazetteer.shared.User;
 
+import com.bbn.openmap.geo.Geo;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.hp.hpl.jena.ontology.OntClass;
@@ -191,6 +194,7 @@ public class GazetteerServiceImpl extends RemoteServiceServlet implements Gazett
 		parameters.add("wkt");
 		parameters.add("county");
 		parameters.add("triplas");
+		parameters.add("geo1");
 		List<Locality> result = new ArrayList<Locality>();
 		System.out.println(search);
 		if(search.equals("reservas proximas a 100 km da cidade de Manaus")){
@@ -358,40 +362,63 @@ public class GazetteerServiceImpl extends RemoteServiceServlet implements Gazett
 	@Override
 	public Integer insertLocality(Locality locality) {
 		SPRQLQuery spql = new SPRQLQuery();
+		
+		if(locality==null)
+			return 0;
 		if(!spql.askService())
 			return 0;
-		
-		int individual = spql.getIndex();
-		String query = "DELETE WHERE{ <"+locality.getIdTriple()+"> ?p ?o .} ; ";
-		query += " INSERT DATA { <"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#contributors> \""+locality.getContributors()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
-		query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#agreement> \""+locality.getAgreeCoordinate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
-		query +="<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#infotype> \"user\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
-		query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#locality> \""+locality.getLocality()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
-		query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#county> \""+locality.getCounty()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
-		query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#ntriples> \""+locality.getNtriplas()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
-		query += "<"+locality.getIdTriple()+"> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+locality.getType()+"> . ";
-        
-		
-		if(locality.getIdGeo().equals("") || locality.getIdGeo()==null){
-				query+="<"+locality.getIdTriple()+"> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> . ";
-				query += " <http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> <http://www.opengis.net/ont/geosparql#asWKT> \""+locality.getGeometry()+";http://www.opengis.net/def/crs/EPSG/0/4326\"^^<http://strdf.di.uoa.gr/ontology#WKT> . ";
-				query += "<http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> <http://www.semanticweb.org/ontologies/Gazetter#date> \""+locality.getDate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
-				query +="<http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+">  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#Geometry>  . }";
-		}else{
+		if(!locality.isUpdateGeo()){
+			int individual = spql.getIndex();
+			String query = "DELETE WHERE{ <"+locality.getIdTriple()+"> ?p ?o .} ; ";
+			query += " INSERT DATA { <"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#contributors> \""+locality.getContributors()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
+			query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#agreement> \""+locality.getAgreeCoordinate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
+			query +="<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#infotype> \"user\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+			query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#locality> \""+locality.getLocality()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+			query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#county> \""+locality.getCounty()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+			query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#ntriples> \""+locality.getNtriplas()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
+			query += "<"+locality.getIdTriple()+"> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+locality.getType()+"> . ";
+	        query+="<"+locality.getIdTriple()+"> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> . ";
+			query += " <http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> <http://www.opengis.net/ont/geosparql#asWKT> \""+locality.getGeometry()+";http://www.opengis.net/def/crs/EPSG/0/4326\"^^<http://strdf.di.uoa.gr/ontology#WKT> . ";
+			query += "<http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+"> <http://www.semanticweb.org/ontologies/Gazetter#date> \""+locality.getDate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
+			query +="<http://www.semanticweb.org/ontologies/Gazetter#"+(individual)+">  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#Geometry>  . }";
 			query+=" }";
 			System.out.println(query);
 			spql.insertDataEndpoint(query);
-			query = "INSERT INTO <http://www.semanticweb.org/ontologies/GazetterTemp#> {" +
-				""+locality.getIdTriple()+" <http://www.opengis.net/ont/geosparql#hasGeometry> <http://www.semanticweb.org/ontologies/GazetterTemp#"+(individual)+"> . "+
-				" <http://www.semanticweb.org/ontologies/GazetterTemp#"+(individual)+"> <http://www.opengis.net/ont/geosparql#asWKT> \""+locality.getGeometry()+";http://www.opengis.net/def/crs/EPSG/0/4326\"^^<http://strdf.di.uoa.gr/ontology#WKT> . "+
-				"<http://www.semanticweb.org/ontologies/GazetterTemp#"+(individual)+">  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#Geometry>  . }";
+		}else{
+			int individual = spql.getTempIndex();
+			individual++;
+			String val [] = locality.getIdTriple().split("#");
+			String tripleID = val[0]+"/temp/"+val[1];
+			String query = "INSERT DATA {"
+					+ " GRAPH <http://swigazetteer/temp> { <"+tripleID+"> <http://swigazetteer/temp/ontology/hasGeometry> <http://swigazetteer/temp/id/"+individual+"> ."
+					+ "	<http://swigazetteer/temp/id/"+individual+">  <http://www.opengis.net/ont/geosparql#asWKT> \""+locality.getGeometry()+";http://www.opengis.net/def/crs/EPSG/0/4326\"^^<http://strdf.di.uoa.gr/ontology#WKT> ."
+					+ " <http://swigazetteer/temp/id/"+individual+">  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"<http://www.opengis.net/ont/sf#Point>\" ."
+					+ " <http://swigazetteer/temp/id/"+individual+">  <http://swigazetteer/temp#date> \""+locality.getDate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> .	} }";
+			
 			System.out.println(query);
+			spql.insertDataEndpoint(query);
+		    Geo center = spql.getCentertemp(tripleID);
+		    if(center!=null){
+			    String geo = "POINT("+center.getLatitude()+" "+center.getLongitude()+")";
+			    query ="DELETE WHERE{ <"+locality.getIdGeo()+">  <http://www.opengis.net/ont/geosparql#asWKT> ?a . ";
+			    query+="<"+locality.getIdTriple()+">  <http://www.semanticweb.org/ontologies/Gazetter#agreement> ?b . ";
+			    query+="<"+locality.getIdTriple()+">  <http://www.semanticweb.org/ontologies/Gazetter#infotype> ?c . ";
+			    query+="<"+locality.getIdTriple()+">  <http://www.semanticweb.org/ontologies/Gazetter#locality> ?d . ";
+			    query+="<"+locality.getIdTriple()+">  <http://www.semanticweb.org/ontologies/Gazetter#county> ?e . }; ";
+			    query += "INSERT DATA { <"+locality.getIdGeo()+"> <http://www.opengis.net/ont/geosparql#asWKT> \""+geo+";http://www.opengis.net/def/crs/EPSG/0/4326\"^^<http://strdf.di.uoa.gr/ontology#WKT> . ";
+			    query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#agreement> \""+locality.getAgreeCoordinate()+"\"^^<http://www.w3.org/2001/XMLSchema#long> . ";
+				query +="<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#infotype> \"user\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+				query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#locality> \""+locality.getLocality()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+				query += "<"+locality.getIdTriple()+"> <http://www.semanticweb.org/ontologies/Gazetter#county> \""+locality.getCounty()+"\"^^<http://www.w3.org/2001/XMLSchema#string> . ";
+				query += "<"+locality.getIdTriple()+"> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+locality.getType()+"> . }";
+		        
+				System.out.println(query);
+				spql.insertDataEndpoint(query);
+		    }
 		}
-	
-		System.out.println(query);
-		if(spql.insertDataEndpoint(query))
-			return 1;
-		return 0;
+		
+			
+		return 1;
 	}
 
 	@Override

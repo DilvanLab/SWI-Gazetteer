@@ -52,6 +52,16 @@ public class InsertPlace extends Composite implements InsertPlaceView{
 	}
 	
 
+	public TextBox getCounty() {
+		return county;
+	}
+
+
+	public void setCounty(TextBox county) {
+		this.county = county;
+	}
+
+
 	public Label getLabel_place_inf() {
 		return label_place_inf;
 	}

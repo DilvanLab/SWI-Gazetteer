@@ -219,8 +219,10 @@ public class Graph extends Composite implements GraphView {
 
 	@Override
 	public boolean trust() {		
-		if(graph_yes.isAttached())
-			return true;		
+		if(graph_yes.isChecked())
+			return true;	
+		else if(graph_no.isChecked())
+			return false;
 		return false;
 	}
 }

@@ -36,6 +36,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import br.usp.icmc.gazetteer.shared.Locality;
 import br.usp.icmc.gazetteer.shared.Out_Polygon;
 
+import com.bbn.openmap.geo.Geo;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.query.QueryFactory;
@@ -154,7 +155,10 @@ public class SPRQLQuery {
 		        						
 		        					else if(value2.equals("triplas"))
 		        						l.setNtriplas(tripleStore.get(value2));
-		        						
+		        					else if(value2.equals("geo1")){
+		        						l.setIdGeo(tripleStore.get(value2));
+		        						System.out.println(">>>>>>>>>>>>>>>>>>>>"+tripleStore.get(value2));
+		        					}
 		        			}
 		        		result.add(l);
 		        	}
@@ -198,10 +202,11 @@ public class SPRQLQuery {
 		try{
 			while(iterator2.hasNext()){
 				String value2 = iterator2.next();
-								
-					if(value2.equals("instance")) 
+				 	if(value2.equalsIgnoreCase("geo1")){
+						l.setIdGeo(tripleStore.get(value2));
+					}else if(value2.equals("instance")){ 
 						l.setIdTriple(tripleStore.get(value2));
-					else if(value2.equals("date"))
+					}else if(value2.equals("date"))
 						l.setDate(tripleStore.get(value2));
 					else if(value2.equals("locality")) 
 						l.setLocality(tripleStore.get(value2));
@@ -268,8 +273,9 @@ public class SPRQLQuery {
 				String value = names.next();
 				if(soln.get(value).isLiteral())
 					tripleStore.put(value, soln.get(value).asLiteral().getString());
-				else if(soln.get(value).isResource())
+				else if(soln.get(value).isResource()){
 					tripleStore.put(value, soln.get(value).toString());
+				}
 			}
 			result.add(createLocal(tripleStore,parameters));
 			tripleStore.clear();
@@ -593,7 +599,6 @@ public class SPRQLQuery {
 				
 				local.setNtriplas(triplas.getString());
 				
-				local.setExistGeo(false);
 				local.setIdTriple(ontUri.toString());
 				local.setLocality(locality.getString());
 				local.setType(type.toString());
@@ -659,7 +664,6 @@ public class SPRQLQuery {
 			if(!county.equals(""))
 				local.setCounty(county);
 			
-			local.setExistGeo(true);
 			local.setIdGeo(geoUri.toString());
 			local.setIdTriple(ontUri.toString());
 			local.setLocality(locality.getString());
@@ -775,5 +779,60 @@ public class SPRQLQuery {
 		return info;
 	}
 
+	public int getTempIndex() {
+		String queryString = "SELECT (COUNT(?s) AS ?NumOfTriples) FROM <http://swigazetteer/temp> WHERE {	?s  <http://swigazetteer/temp/ontology/hasGeometry>  ?o }";
+		com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
+		QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
+		ResultSet results= queryExecution.execSelect();
+		int value=0;
+		while(results.hasNext()){
+			QuerySolution solution = results.nextSolution() ;
+			value = solution.getLiteral("NumOfTriples").getInt();
+		}
+		return value;
+	}
+
+	public Geo getCentertemp(String idTriple) {
+		Out_Polygon out = new Out_Polygon();
+		List<Geo> pontos = new ArrayList<Geo>();
+		String queryString = "SELECT ?point FROM <http://swigazetteer/temp> WHERE {	<"+idTriple+">  <http://swigazetteer/temp/ontology/hasGeometry>  ?geo ."
+				+ " ?geo <http://www.opengis.net/ont/geosparql#asWKT> ?point }";
+		System.out.println(queryString);
+		com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
+		QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
+		ResultSet results= queryExecution.execSelect();		
+		while(results.hasNext()){
+			QuerySolution solution = results.nextSolution() ;
+			String temp = solution.getLiteral("point").getString();
+			
+			if(temp.contains("POINT")){
+				String value = temp.replaceAll(";http://www.opengis.net/def/crs/EPSG/0/4326", "");
+				value = value.substring(6, value.length()-2);
+				float x = out.transformFloat(value.split(" ")[0]);
+			  	float y = out.transformFloat(value.split(" ")[1]);
+			  	Geo p = new Geo(y,x);
+			  	System.out.println("TEMP GRAPH  "+p);
+				pontos.add(p);
+			}
+		}
+		Geo centr =  centroid(pontos);
+		return centr;
+	}
+	public Geo centroid(List<Geo> knots)  {
+	    double centroidX = 0, centroidY = 0;
+	    	for(Geo knot : knots) {
+	            centroidX += knot.getLatitude();
+	            centroidY += knot.getLongitude();
+	        }
+	       if(knots.size()>=1){
+	    	   centroidX = centroidX / knots.size();
+	    	   centroidY = centroidY / knots.size();
+	    	System.out.println("centroidX: "+centroidX+"   "+"centroidY: "+centroidY);
+	    	   return new Geo( centroidX, centroidY);
+	    	   
+	       }
+	       System.out.println("voltando null");
+	    return null;
+	}
 	
 }

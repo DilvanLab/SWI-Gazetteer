@@ -16,9 +16,9 @@
 			<g:Label text="County" ui:field="County"/>
 			<g:TextBox ui:field="county"/>
 			<g:HorizontalPanel>
-				<g:RadioButton name="new name" text="Point" ui:field="point_radio"/>
-				<g:RadioButton name="new name" text="Polygon" ui:field="polygon_radio"/>
-				<g:RadioButton name="new name" text="Draw in map" ui:field="draw_radio" checked="true"/>
+				<g:RadioButton name="new name" text="Point" ui:field="point_radio" formValue="point"/>
+				<g:RadioButton name="new name" text="Polygon" ui:field="polygon_radio" formValue="poly"/>
+				<g:RadioButton name="new name" text="Draw in map" ui:field="draw_radio" checked="true" formValue="map"/>
 			</g:HorizontalPanel>
 			<g:TextArea ui:field="coord_text"/>
 			<g:Button ui:field="submit_coord" text="Submit"/>

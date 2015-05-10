@@ -4,7 +4,7 @@ PREFIX geo:<http://www.opengis.net/ont/geosparql#>
 PREFIX opengis: <http://www.opengis.net/def/uom/OGC/1.0/>
 PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#>
 
-SELECT  ?instance ?date ?locality ?contributors ?agreement ?wkt  ?subject ?county ?triplas
+SELECT  ?instance ?date ?locality ?contributors ?agreement ?wkt  ?subject ?county ?triplas ?geo1
 WHERE { 
                  ?instance rdf:type <http://www.geonames.org/ontology/mappings#Camp> .		
 		 ?instance swi:locality ?locality .

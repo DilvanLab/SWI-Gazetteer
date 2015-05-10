@@ -121,6 +121,7 @@ PlaceInformationView.Presenter, GraphView.Presenter {
 			clientFactory.getGraphView().initialize();
 			main.getInsertAndGraph().add(clientFactory.getGraphView().asWidget());
 			clientFactory.getMapaView().showGeometry(locality);
+			PrincipalActivity.locality = locality;
 		}else{
 			this.setInfoPlace(locality);
 		}
@@ -160,7 +161,6 @@ PlaceInformationView.Presenter, GraphView.Presenter {
 	}
 	
 	public void setInfoPlace(Locality locality){
-		PrincipalActivity.locality= locality;
 		clientFactory.getInsertPlaceView().insertPlaceinfo(locality);
 	
 	}

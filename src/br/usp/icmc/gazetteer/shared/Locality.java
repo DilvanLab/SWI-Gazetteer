@@ -17,7 +17,7 @@ public class Locality implements Serializable  {
 	 * 
 	 */
 	private String locality;
-	private String county="não informado";
+	private String county="";
 	private String geometry="";
 	private String userId;
 	private int agreeCoordinate;
@@ -25,7 +25,7 @@ public class Locality implements Serializable  {
 	private String idTriple;
 	private String date="";
 	private String type;
-	private boolean existGeo=false;
+	private boolean updateGeo=false;
 	private String idGeo="";
 	private String ntriplas;
 	
@@ -149,12 +149,12 @@ public class Locality implements Serializable  {
 		this.idTriple = idTriple;
 	}
 
-	public boolean isExistGeo() {
-		return existGeo;
+	public boolean isUpdateGeo() {
+		return this.updateGeo;
 	}
 
-	public void setExistGeo(boolean existGeo) {
-		this.existGeo = existGeo;
+	public void setUpdateGeo(boolean existGeo) {
+		this.updateGeo= existGeo;
 	}
 
 	public String getIdGeo() {

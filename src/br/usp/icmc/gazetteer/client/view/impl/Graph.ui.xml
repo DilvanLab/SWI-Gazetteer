@@ -6,8 +6,8 @@
 		<g:VerticalPanel>
 			<g:SimplePanel ui:field="panel_graph"/>
 			<g:Label text="Did you agree with this coordinate?"/>
-			<g:RadioButton name="new name" text="Yes" checked="true" ui:field="graph_yes"/>
-			<g:RadioButton name="new name" text="No" ui:field="graph_no"/>
+			<g:RadioButton name="trust" text="Yes" checked="true" ui:field="graph_yes"/>
+			<g:RadioButton name="trust" text="No" ui:field="graph_no"/>
 			<g:Button text="Submit" ui:field="agreement_submit"/>
 		</g:VerticalPanel>
 </ui:UiBinder> 
