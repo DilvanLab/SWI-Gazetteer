@@ -27,7 +27,9 @@ public interface MapaView  extends IsWidget
 	void clear();
 	void buildMap();
 	String getGeometry();
+	boolean countFeature();
 	void PointsFromServer(List<Float[]> result);
 	void callServerPoints();
 	void showGeometry(Locality locality);
+	void clearAllPoint();
 }

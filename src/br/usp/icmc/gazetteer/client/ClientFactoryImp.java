@@ -174,7 +174,7 @@ public class ClientFactoryImp implements ClientFactory{
 		locality.setContributors(locality.getContributors()+1);
 		
 		if(insertPlace.getInsertPlace().getDraw_radio().getFormValue().equals("map")){
-			if(map.getGeometry().equals("invalido")){
+			if(map.countFeature()){
 				Window.alert("Coordenadas invalidas");
 				return null;
 			}
@@ -320,6 +320,8 @@ public class ClientFactoryImp implements ClientFactory{
 					@Override
 					public void onSuccess(Integer result) {
 						if(result.intValue()>0){
+							map.clearAllPoint();
+							main.getInsertAndGraph().clear();
 							PrincipalActivity.locality=null;
 							Window.alert("Information inserted in the Database.");
 						}

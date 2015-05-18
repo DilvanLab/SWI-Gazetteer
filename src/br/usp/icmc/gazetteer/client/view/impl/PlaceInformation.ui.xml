@@ -12,5 +12,6 @@
 		<g:Label  ui:field="communCoordinate" />
 		<g:Label ui:field="ntriples"/>
 		<g:Hyperlink  targetHistoryToken="LinkedData" ui:field="placeLink" />
+		<g:Button ui:field="button">Iniciar Teste</g:Button>
 	</g:VerticalPanel>
 </ui:UiBinder>  

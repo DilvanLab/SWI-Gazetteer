@@ -103,7 +103,7 @@ public class Mapa extends Composite implements MapaView {
 	private DrawFeature drawLineFeatureControl = null;
 	private DrawFeature drawPolygonFeatureControl = null;
 	private SelectFeature deleteFeatureControl = null; //deleting is realized using a SelectFeature control
-	private static String type;
+	private static String geometry;
 	private static  Map map;
 	private Vector vectorFeature;
 
@@ -122,15 +122,21 @@ public class Mapa extends Composite implements MapaView {
 
 	}
 	@Override
+	public void clearAllPoint(){
+		vectorGeo.destroyFeatures();
+		
+	}
+	@Override
+	public boolean countFeature(){
+		if(vectorGeo.getFeatures().length>1)
+			return true;
+		return false;
+	}
+	@Override
 	public String getGeometry(){
 		String value="";
-		if(vectorGeo.getFeatures().length>1)
-			return "invalido";
-		for(VectorFeature v: vectorGeo.getFeatures()){
-			v.getGeometry().transform(new Projection(map.getProjection()),DEFAULT_PROJECTION);
-			value =v.getGeometry().toString();
-			
-		}
+		vectorGeo.getFeatures()[0].getGeometry().transform(new Projection(map.getProjection()), DEFAULT_PROJECTION);
+		 value = vectorGeo.getFeatures()[0].getGeometry().toString();
 		return value;
 	}
 
@@ -226,6 +232,7 @@ public class Mapa extends Composite implements MapaView {
 		addButtons();
 		panel_map.add(mapWidget);
 		System.out.println("FIM");
+		panel_map.addStyleName("#mapa");
 		DOM.setInnerHTML(RootPanel.get("Loading-Message").getElement(), "");
 	}
 
@@ -235,7 +242,7 @@ public class Mapa extends Composite implements MapaView {
 		addLineString(map);
 		addPolygon(map);
 		deleteFeatures(map);
-
+		components.addStyleName("button_map");
 		components.add(rbNavigate);
 		components.add(rbDrawPoint);
 		components.add(rbDrawLine);
@@ -253,6 +260,7 @@ public class Mapa extends Composite implements MapaView {
 		rbDrawPoint.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				desativeAll();
+				clearAllPoint();
 				drawPointFeatureControl.activate();
 			}
 		});
@@ -261,6 +269,7 @@ public class Mapa extends Composite implements MapaView {
 			@Override
 			public void onClick(ClickEvent event) {
 				desativeAll();
+				clearAllPoint();
 				drawLineFeatureControl.activate();
 
 			}
@@ -270,6 +279,7 @@ public class Mapa extends Composite implements MapaView {
 			@Override
 			public void onClick(ClickEvent event) {
 				desativeAll();
+				clearAllPoint();
 				drawPolygonFeatureControl.activate();				
 			}
 		});
@@ -278,6 +288,7 @@ public class Mapa extends Composite implements MapaView {
 			@Override
 			public void onClick(ClickEvent event) {
 				desativeAll();
+				clearAllPoint();
 				deleteFeatureControl.activate();
 			}
 		});

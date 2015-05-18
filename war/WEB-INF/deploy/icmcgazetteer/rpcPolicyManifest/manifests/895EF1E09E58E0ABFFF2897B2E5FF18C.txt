@@ -1,2 +1,0 @@
-serviceClass: br.usp.icmc.gazetteer.client.GazetteerService
-path: 36193F0F974471D5ADE94553A4B69623.gwt.rpc

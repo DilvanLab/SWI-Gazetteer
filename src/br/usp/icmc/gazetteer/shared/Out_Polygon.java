@@ -10,7 +10,9 @@ import java.util.ArrayList;
 
 
 
+
 import com.bbn.openmap.geo.Geo;
+import com.bbn.openmap.geo.GeoArray;
 import com.bbn.openmap.geo.OMGeo;
 import com.bbn.openmap.geo.OMGeo.Polygon;
 
@@ -59,7 +61,26 @@ public class Out_Polygon {
 		}
 		
 	}
-	
+	//-60.266527122919086 -1.9861605335312493, -60.232453280512786 -2.0028559334131457, -60.22205287356857 -2.0005934285007587,
+	 public String buildPolygon(String geometry,boolean sparql){
+		 geometry = geometry.substring(10,geometry.length()-2);
+		 System.out.println(geometry);
+		 //-60.266527122919086 -1.9861605335312493,
+		//-60.232453280512786 -2.0028559334131457,
+	        String vetor [] = geometry.split(",");
+	        String geo="";
+            for(int i=0;i<vetor.length;i++){
+            	   if(vetor[i].charAt(0)==' ')
+            	   vetor[i] = vetor[i].substring(1);
+                   String [] coordinate = vetor[i].split(" ");
+                   geo+=coordinate[1]+" "+coordinate[0]+",";
+         //          System.out.println(coordinate[1]+" "+coordinate[0]+"      "+coordinate.length);
+               }
+            geo =geo.substring(0, geo.length()-1);
+            geo ="POLYGON(("+geo+"))";
+            System.out.println(geo);
+               return geo;
+	 }
 	
 	 public OMGeo.Polygon buildPolygon(String path) throws FileNotFoundException, IOException{
 	       

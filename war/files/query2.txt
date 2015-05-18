@@ -13,7 +13,7 @@ WHERE {
 		 ?instance swi:ntriples ?triplas .
 		 ?instance geo:hasGeometry ?geo1 .
                  ?geo1 geo:asWKT ?wkt . 
-		 OPTIONAL { ?instance swi:hasCounty ?county . }
+		 OPTIONAL { ?instance swi:county ?county . }
                  
 		 OPTIONAL { ?geo1 swi:date ?date .  }
 		 

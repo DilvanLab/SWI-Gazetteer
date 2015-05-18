@@ -226,9 +226,9 @@ public class KMeans {
 				p.setCentroid(pointsClusters.get(i).getCentroid());
 				for(int j=0;j<pointsClusters.get(i).getPoints().size();j++){
 					if(pointsClusters.get(i).getPoints().get(j).getCounty()!=null)
-					writer.write("\t\t\t" + pointsClusters.get(i).getPoints().get(j).getLocation()+" County: "+pointsClusters.get(i).getPoints().get(j).getCounty().getNome()+" id: "+pointsClusters.get(i).getPoints().get(j).getID()+"\n");
+					writer.write("\t\t\t" + pointsClusters.get(i).getPoints().get(j).getLocation()+" Municipality: "+pointsClusters.get(i).getPoints().get(j).getCounty().getNome()+" Geo: "+pointsClusters.get(i).getPoints().get(j).getGeometry()+" id: "+pointsClusters.get(i).getPoints().get(j).getID()+"\n");
 					else
-						writer.write("\t\t\t" + pointsClusters.get(i).getPoints().get(j).getLocation()+" id: "+pointsClusters.get(i).getPoints().get(j).getID()+"\n");
+						writer.write("\t\t\t" + pointsClusters.get(i).getPoints().get(j).getLocation()+" Geo: "+pointsClusters.get(i).getPoints().get(j).getGeometry()+" id: "+pointsClusters.get(i).getPoints().get(j).getID()+"\n");
 					
 				}
 				p.setPlaces((ArrayList<Place>) pointsClusters.get(i).getPoints());

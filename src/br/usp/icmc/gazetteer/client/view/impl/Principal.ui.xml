@@ -7,10 +7,18 @@
 		margin-right:12em;
 
 	}
+	.mapa {
+	}
+	.botoes {
+	}
+	.busca {
+	}
+	.busca_p {
+	}
 	</ui:style>
 	<g:HTMLPanel>
-		<g:VerticalPanel>
-			<g:HorizontalPanel>
+		<g:VerticalPanel styleName="{style.busca}">
+			<g:HorizontalPanel styleName="{style.busca_p}">
 				<g:Image ui:field="image"/>
 				<g:SimplePanel ui:field="menu"/>
 <!-- 				<g:HorizontalPanel ui:field="user"> -->
@@ -33,8 +41,8 @@
 					</g:HorizontalPanel>
 				</g:VerticalPanel>
 				<g:VerticalPanel width="100%" height="100%">
-					<g:SimplePanel ui:field="mapa" width="60em" height="35em"/>
-					<g:SimplePanel ui:field="botoes"/>
+					<g:SimplePanel ui:field="mapa" width="60em" height="35em" styleName="{style.mapa}"/>
+					<g:SimplePanel ui:field="botoes" styleName="{style.botoes}"/>
 				</g:VerticalPanel>
 			</g:HorizontalPanel>
 		</g:VerticalPanel>

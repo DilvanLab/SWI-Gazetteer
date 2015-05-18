@@ -80,7 +80,7 @@ PlaceInformationView.Presenter, GraphView.Presenter {
 		main.getMap().add(clientFactory.getMapaView().asWidget());
 		clientFactory.getInsertPlaceView().callOntTypeServer();		
 		clientFactory.getMapaView().clear();
-		clientFactory.getMapaView().callServerPoints();
+	//	clientFactory.getMapaView().callServerPoints();
 		clientFactory.getPrincipalView().getButtonMap().add(clientFactory.getMapaView().getComponets().asWidget());
 		clientFactory.getBottomView().callInfoServer();
 		panel.setWidget(main.asWidget());

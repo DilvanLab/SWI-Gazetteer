@@ -36,7 +36,7 @@ public class Search extends Composite implements SearchView{
 		search_text.addItem("Campo da Catuquira");
 		search_text.addItem("Locais dentro do Parque Nacional do Jau");
 		search_text.addItem("Rios do estado do amazonas");
-		search_text.addItem("Places part-of Manaus");
+		search_text.addItem("Places part-of municipio de Manaus");
 	}
 	
 	private void build_quality_type(){

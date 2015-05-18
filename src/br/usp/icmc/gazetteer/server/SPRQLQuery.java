@@ -285,56 +285,6 @@ public class SPRQLQuery {
 	}
 	
 	
-	public List<Locality> findIntersection(OntClass moreGeneric,OntClass moreSpecific,String search) throws Exception{
-		List<Locality> result = new ArrayList<Locality>();
-		String queryString="";
-			queryString=" PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-					+ " PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-					+ " PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#> "
-					+ " SELECT * WHERE{  ?subject rdfs:subClassOf <"+moreGeneric.toString()+"> . "
-					+ " ?instance a ?subject . "
-					+ " ?instance2 a <"+moreSpecific.toString()+"> . "
-					+ " ?instance geo:hasGeometry ?geo1 . "
-					+ " ?instance swi:locality ?local1 . "
-					+ " ?instance2 swi:locality ?local2 . "
-					+ " ?instance2 geo:hasGeometry ?geo2 . "
-					+ " ?geo1 geo:asWKT ?wkt1 . "
-					+ " ?geo2 geo:asWKT ?wkt2 . "
-					+ " FILTER(?geo1 != ?geo2) . "
-					+ " FILTER(geof:sfIntersects(?wkt1,?wkt2)).} ";
-		
-		System.out.println(queryString);
-		com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
-		QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
-
-		ResultSet results= queryExecution.execSelect();
-		
-		while(results.hasNext()) {
-			QuerySolution soln = results.nextSolution() ;
-			Literal local1 = soln.getLiteral("?local1");
-			Literal local2 = soln.getLiteral("?local2");
-			//try find more especific first
-			String place [] = {local1.getString(),local2.getString()};
-			HashMap<String,String> parameters=new HashMap<String,String>();
-			parameters.put("locality","?local2");
-			parameters.put("geo", "?wkt2");
-			if(similarityBettewenplaces(search,place)){
-				System.out.println("Sao similares"+place);
-		//		result.add(createLocal(soln,parameters));
-			}
-		
-		}
-		return result;
-	}
-	private boolean similarityBettewenplaces(String search, String[] place) throws Exception {
-		Bigram bigram = new Bigram();
-		for(String s: place){
-			if(bigram.stringSimilarityScore(bigram.bigram(search), bigram.bigram(s))>=treshold){
-				return true;
-			}
-		}
-		return false;
-	}
 /*
  * 		parameters.put("locality","?local2");
 		parameters.put("uri", "?instance");
@@ -348,199 +298,7 @@ public class SPRQLQuery {
  */
 	
 	
-	public Collection<? extends Locality> findSinglePlace(OntClass ontClass,String search) throws Exception {
-		//try find objects from the first type found
-		List<Locality> list = new ArrayList<Locality>();
-		String queryString="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-				+ " PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-				+ " PREFIX geof: <http://www.opengis.net/def/function/geosparql/>"
-				+ " PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#> "
-				+ " SELECT DISTINCT ?s WHERE{ ?s rdfs:type <"+ontClass.toString()+">. "
-				+ " ?s swi:locality ?local1 . "
-				+ " ?s geo:hasGeometry ?geo1 . "
-				+ " ?geo1 geo:asWKT ?wkt1 . }";
-		com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
-		QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
-
-		ResultSet results= queryExecution.execSelect();
-		
-		while(results.hasNext()) {
-			QuerySolution soln = results.nextSolution() ;
-			Literal local1 = soln.getLiteral("?local1");
-			String[] place = {local1.getString()};
-			HashMap<String,String> parameters=new HashMap<String,String>();
-			parameters.put("locality","?local1");
-			parameters.put("geo", "?wkt1");
-			if(similarityBettewenplaces(search,place)){
-				System.out.println("Sao similares"+place);
-			//	list.add(createLocal(soln,parameters));
-			}
-		}
-		return list;
-	}
 	
-	public List<Locality> findProximity(OntClass moreGeneric, OntClass moreSpecific,List<OntProperty> property,String search) throws Exception{
-		String queryString="";
-		List<Locality> result = new ArrayList<Locality>();
-		int distance = findistance(search,property);
-		String diretional [] ={"southeast","southwest","northwest","northeast","west","south","north","east"};
-		if(distance==0)
-			distance =300;
-		for(OntProperty ot:property){
-			for(String dire:diretional){
-				if(ot.toString().equals("http://www.semanticweb.org/ontologies/Gazetter#"+dire)){
-					queryString="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-							+ " PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-							+ " PREFIX geof: <http://www.opengis.net/def/function/geosparql/>"
-							+ " PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#> "
-							+ " SELECT * WHERE{ ?s rdfs:type <"+moreGeneric.toString()+">. "
-							+ " ?s geo:hasGeometry ?geo1 ."
-							+ " ?s swi:locality ?local1 . "
-							+ " ?geo1 geo:asWKT ?wkt1 . ";
-					com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
-					QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
-					ResultSet results= queryExecution.execSelect();
-					while(results.hasNext()) {
-						QuerySolution soln = results.nextSolution() ;
-						Literal local1 = soln.getLiteral("?local1");
-						Literal local2 = soln.getLiteral("?local2");
-						String place [] = {local1.getString(),local2.getString()};
-						HashMap<String,String> parameters=new HashMap<String,String>();
-						parameters.put("locality","?local2");
-						parameters.put("geo", "?wkt2");
-						if(similarityBettewenplaces(search,place)){
-							System.out.println("Sao similares"+place);
-					//		result.add(createLocal(soln, parameters));
-						}
-					
-					}
-					Locality local = getTheMostSimilary(result,search);
-					queryString="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-							+ " PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-							+ " PREFIX geof: <http://www.opengis.net/def/function/geosparql/>"
-							+ " PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#> "
-							+ " SELECT * WHERE{ ?s rdfs:type <"+moreGeneric.toString()+">. "
-							+ " ?s geo:hasGeometry ?geo1 ."
-							+ " ?s swi:locality ?local1 . "
-							+ " ?geo1 geo:asWKT ?wkt1 . ";
-				}
-			}
-		}
-		String wkt = pointMoreSpecific(search,moreSpecific.toString());
-		if(wkt!=null){
-		//calcule distance
-				queryString="PREFIX geof:<http://www.opengis.net/def/function/geosparql/>"
-						+ "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
-						+ "PREFIX geo:<http://www.opengis.net/ont/geosparql#>"
-						+ "PREFIX opengis: <http://www.opengis.net/def/uom/OGC/1.0/>"
-						+ "PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#>"
-						+ "SELECT *"
-						+ "WHERE { ?s rdf:type <"+moreGeneric.toString()+"> ."
-						+ "        ?s geo:hasGeometry ?s1 ."
-						+ "	?s1 geo:asWKT ?o1 ."
-						+ "        ?s swi:locality ?locality ."
-						+ "	 FILTER(geof:sfWithin(?o1, geof:buffer("+wkt+", "+distance+", opengis:metre))).}";
-				
-			System.out.println(queryString);
-			com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
-			QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
-
-			ResultSet results= queryExecution.execSelect();
-			
-			while(results.hasNext()) {
-				QuerySolution soln = results.nextSolution() ;
-				Literal local1 = soln.getLiteral("?local1");
-				Literal local2 = soln.getLiteral("?local2");
-				String place [] = {local1.getString(),local2.getString()};
-				HashMap<String,String> parameters=new HashMap<String,String>();
-				parameters.put("locality","?local2");
-				parameters.put("geo", "?wkt2");
-			//	if(similarityBettewenplaces(search,place))
-		//			result.add(createLocal(soln, parameters));
-			
-			}			
-		}
-			
-		return result;
-	}
-	
-	private String pointMoreSpecific(String string, String string2) throws Exception {
-		String temp [] = string.split(" ");
-		List<Locality> result = new ArrayList<Locality>();
-		String join="";
-		for(int i=0;i<temp.length;i++){
-			if(temp[i].contains(string2))
-				break;
-			join+= temp[i];
-		}
-	String	queryString="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-				+ " PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-				+ " PREFIX geof: <http://www.opengis.net/def/function/geosparql/>"
-				+ " PREFIX swi: <http://www.semanticweb.org/ontologies/Gazetter#> "
-				+ " SELECT * WHERE{ ?s rdf:type <"+string2+">. "
-				+ " ?s geo:hasGeometry ?geo1 ."
-				+ " ?s swi:locality ?local1 . "
-				+ " ?geo1 geo:asWKT ?wkt1 . ";
-	System.out.println(queryString);
-	com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
-	QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
-
-	ResultSet results= queryExecution.execSelect();
-	
-	while(results.hasNext()) {
-		
-		QuerySolution soln = results.nextSolution() ;
-		Literal local1 = soln.getLiteral("?local1");
-		String place [] = {local1.getString()};
-		HashMap<String,String> parameters=new HashMap<String,String>();
-		parameters.put("locality","?local1");
-		parameters.put("geo", "?wkt1");
-		if(similarityBettewenplaces(join,place)){
-		//	result.add(createLocal(soln, parameters));
-			return result.get(0).getGeometry();
-		}
-	
-	}
-		return null;
-	}
-
-	private Locality getTheMostSimilary(List<Locality> result, String search) {
-		int index=0;
-		Bigram similarity = new Bigram();
-		float max = Float.MIN_VALUE;
-		for(int i=0;i<result.size();i++){
-			float temp = (float) similarity.stringSimilarityScore(similarity.bigram(result.get(i).getLocality()), similarity.bigram(search));
-			if(temp>max){
-				max =temp;
-				index = i;
-			}
-		}
-		return result.get(index);
-	}
-
-	private int findistance(String search,List<OntProperty> property) {
-		List<Integer> values = new ArrayList<Integer>();
-		try{
-			Pattern p = Pattern.compile("-?\\d+");
-			Matcher m = p.matcher(search);
-			while (m.find()) {
-				values.add(Integer.parseInt(m.group()));
-			}
-		}catch(Exception e){
-			
-		}
-		int distance =0;
-		for(int temp:values){
-			distance+=temp;
-		}
-		String temp[] = search.split(" ");
-		for(int i=0;i<temp.length;i++){
-			if(temp[i].equals("km"));
-				distance=distance*1000;
-		}
-		return distance;
-	}
-
 	public HashMap<Integer,Locality> makeSPARQLQuery () {
 		HashMap<Integer,Locality> result = new HashMap<Integer,Locality>();
 		int index=1;
@@ -632,7 +390,7 @@ public class SPRQLQuery {
 				+ " OPTIONAL { ?instance swi:date ?date . }"
 				+ " ?instance geo:hasGeometry ?geometry."
 				+ " ?geometry geo:asWKT ?wkt .}";
-
+		System.out.println(queryString);
 		com.hp.hpl.jena.query.Query query = QueryFactory.create(queryString) ;
 		QueryEngineHTTP queryExecution=new QueryEngineHTTP(URL_endpoint,query);
 
@@ -808,9 +566,9 @@ public class SPRQLQuery {
 			if(temp.contains("POINT")){
 				String value = temp.replaceAll(";http://www.opengis.net/def/crs/EPSG/0/4326", "");
 				value = value.substring(6, value.length()-2);
-				float x = out.transformFloat(value.split(" ")[0]);
-			  	float y = out.transformFloat(value.split(" ")[1]);
-			  	Geo p = new Geo(y,x);
+				double x = out.transformFloat(value.split(" ")[0]);
+			  	double y = out.transformFloat(value.split(" ")[1]);
+			  	Geo p = new Geo(x,y);
 			  	System.out.println("TEMP GRAPH  "+p);
 				pontos.add(p);
 			}

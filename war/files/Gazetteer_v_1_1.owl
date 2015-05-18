@@ -1206,6 +1206,7 @@
         <skos:altLabel rdf:datatype="&xsd;string">proximidades</skos:altLabel>
         <skos:altLabel rdf:datatype="&xsd;string">proximo</skos:altLabel>
         <skos:altLabel rdf:datatype="&xsd;string">próximo</skos:altLabel>
+        <skos:altLabel xml:lang="pt">proximas</skos:altLabel>
     </owl:ObjectProperty>
     
 
@@ -1258,6 +1259,7 @@
     <owl:ObjectProperty rdf:about="&Gazetter;partyOf">
         <rdfs:label rdf:datatype="&xsd;string">party_of</rdfs:label>
         <skos:altLabel rdf:datatype="&xsd;string">faz parte</skos:altLabel>
+        <skos:altLabel xml:lang="pt"> part-of</skos:altLabel>
     </owl:ObjectProperty>
     
 

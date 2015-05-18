@@ -10,6 +10,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
@@ -32,6 +33,7 @@ public class PlaceInformation extends Composite implements PlaceInformationView 
 	@UiField Label communCoordinate;
 	@UiField Hyperlink placeLink;
 	@UiField Label ntriples;
+	@UiField Button button;
 
 	interface Place_InformationUiBinder extends
 			UiBinder<Widget, PlaceInformation> {
@@ -41,6 +43,7 @@ public class PlaceInformation extends Composite implements PlaceInformationView 
 		initWidget(uiBinder.createAndBindUi(this));
 		placeLink.setTargetHistoryToken(LinkedDataPlace.URL);
 		placeLink.setText("http://www.semanticweb.org/ontologies/Gazetter#_____");
+		button.setVisible(true);
 	}
 
 	public Label getPlaceSelected() {
@@ -139,5 +142,12 @@ public class PlaceInformation extends Composite implements PlaceInformationView 
 		
 	}
 
+	public static native void fooRunner() /*-{
+	  $doc.fooRunner();
+	}-*/;
 	
+	@UiHandler("button")
+	void onButtonClick(ClickEvent event) {
+		fooRunner();
+	}
 }

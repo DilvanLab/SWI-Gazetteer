@@ -10,7 +10,7 @@ WHERE { ?instance rdf:type <http://dbpedia.org/ontology/ProtectedArea> .
 		 ?instance swi:contributors ?contributors.
 		 ?instance swi:agreement ?agreement . 
 		 ?instance swi:ntriples ?triplas . 
-		 OPTIONAL { ?instance swi:hasCounty ?uc . ?uc swi:county ?county}
+		 OPTIONAL { ?instance swi:county ?county}
          ?instance geo:hasGeometry ?geo1 .
 		 OPTIONAL { ?geo1 swi:date ?date . }
 		 ?geo1 geo:asWKT ?wkt .
